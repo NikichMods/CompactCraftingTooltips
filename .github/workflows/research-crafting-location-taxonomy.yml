@@ -1,0 +1,70 @@
+name: Build crafting-location taxonomy probe
+
+on:
+  push:
+    branches:
+      - 'research/crafting-location-taxonomy'
+    paths:
+      - 'research/CraftingLocationTaxonomy/**'
+      - '.github/workflows/research-crafting-location-taxonomy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v4
+
+      - name: Verify source identity
+        shell: pwsh
+        run: |
+          $actual = git rev-parse HEAD
+          $expected = '${{ github.sha }}'
+          if ($actual -ne $expected) {
+            throw "Source identity mismatch: expected $expected, got $actual"
+          }
+          "source_sha=$actual"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        working-directory: research/CraftingLocationTaxonomy
+        run: dotnet restore CompactCraftingTooltips.Research.csproj --configfile nuget.config
+
+      - name: Build
+        working-directory: research/CraftingLocationTaxonomy
+        run: dotnet build CompactCraftingTooltips.Research.csproj -c Release --no-restore
+
+      - name: Prepare artifact
+        shell: pwsh
+        run: |
+          $dll = Resolve-Path 'research/CraftingLocationTaxonomy/bin/Release/CompactCraftingTooltips.Research.dll'
+          $out = Join-Path $PWD 'artifact'
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          $handed = Join-Path $out 'CompactCraftingTooltips-Research.dll'
+          Copy-Item $dll $handed
+          $hash = (Get-FileHash $handed -Algorithm SHA256).Hash.ToLowerInvariant()
+          @(
+            'probe=crafting-location-taxonomy'
+            'version=0.0.0-research'
+            'source_sha=${{ github.sha }}'
+            "sha256=$hash"
+            'assembly=CompactCraftingTooltips-Research.dll'
+          ) | Set-Content -Encoding UTF8 (Join-Path $out 'BUILD_IDENTITY.txt')
+          Get-Content (Join-Path $out 'BUILD_IDENTITY.txt')
+
+      - name: Upload research artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CompactCraftingTooltips-Research-${{ github.sha }}
+          path: artifact/*
+          if-no-files-found: error
+          retention-days: 14
