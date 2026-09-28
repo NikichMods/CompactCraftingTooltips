@@ -57,3 +57,71 @@ Close these in order where practical:
 7. Which downstream `WidgetsBubbleGUI` sizing/wrapping behavior matters for one grouped line per station family?
 
 Do not assume Roman-numeral parsing, prefix stripping, hard-coded station IDs, or a specific Harmony patch point until evidence supports it.
+
+## Static ownership findings — pinned Graveyard Keeper 1.407 decompile
+
+**Status:** verified static fact.
+
+Primary source: `Kupie/GYK_DECOMP@6abf79199d92482af1c7573870dd9a20ec2270b9`.
+
+### Vanilla row construction
+
+`ItemDefinition.GetTooltipData(Item, bool)` owns the standard item's crafting-location text construction:
+
+1. `GetItemDetails()` supplies `ItemDetails.crafts_in`.
+2. The method preserves the list order and localizes each `ObjectDefinition.id` through `GJL.L(id)`.
+3. It uses the localized comma token `GJL.L(",")` when available.
+4. If at least one location exists, it appends one final `BubbleWidgetTextData` row:
+   `GJL.L("crafted_at") + " " + joined localized station names`.
+5. The row uses `TinyDescription`, centered alignment, and the standard native bubble renderer.
+
+`ItemDefinition.GetTooltipDataCraftAt(Item)` duplicates the same craft-location formatting as a dedicated one-row helper.
+
+### Canonical data source and ordering
+
+`ItemDefinition.GetItemDetails()` caches:
+
+`crafts_in = GameBalance.me.GetItemCraftsIn(this.id)`.
+
+`GameBalance.CreateCraftsCache()` builds the backing item-to-station cache by iterating native `craft_data`, then each recipe's `craft_in` list. It:
+
+- excludes `grave_ground`;
+- excludes hidden recipes and recipes marked `dont_show_in_hint`;
+- resolves each craft-in ID to its native `ObjectDefinition`;
+- adds a station only once per output item;
+- therefore preserves the first native encounter order established by `craft_data -> craft_in`.
+
+`GetItemCraftsIn` returns that cached `List<ObjectDefinition>` (with the game's normal quality/base-ID fallback).
+
+The compact formatter must consume this same ordered native list rather than reconstructing recipe availability independently.
+
+### Known consumers / blast radius
+
+Pinned source contains two direct callers of `ItemDefinition.GetTooltipData(...)`:
+
+- `BaseItemCellGUI` — standard item-cell tooltip path, with `full_detail=true`;
+- `TechUnlock` — technology unlock presentation, with `full_detail=false`.
+
+`TechUnlock` is also the only direct caller found for `GetTooltipDataCraftAt(...)`, used in its special multi-quality prayer-output branch.
+
+Therefore a patch on `GetTooltipData` is not inventory-only by definition. A patch on the dedicated `GetTooltipDataCraftAt` affects a technology-unlock surface. Production scope must account for those callers explicitly.
+
+### Final text consumer
+
+`BubbleWidgetText.Draw(BubbleWidgetTextData)` applies the row's style/alignment/font and then assigns `UILabel.text = data.text`. No later text transformation is visible in that verified draw step; enclosing `WidgetsBubbleGUI` behavior owns sizing/repositioning rather than the string contents.
+
+### Remaining blocker: family/tier identity
+
+`ObjectDefinition` does not expose an obvious generic `tier`, `upgrade_parent`, or station-family field in the pinned class definition. Public source contains examples of tier-like IDs such as `zombie_garden_desk_1/2/3` and `refugee_camp_garden_bed_1/2/3`, but examples are not sufficient to define a whole-game grouping rule.
+
+The production gate therefore remains **BLOCKED** only on the semantic grouping/taxonomy question and its representative acceptance set; owner, source, ordering, direct callers, and final text consumer are now statically established.
+
+## Research-method checkpoint — station family/tier taxonomy
+
+**Question:** determine the complete native crafting-station ID set used by `GetItemCraftsIn` in the live 1.407 balance, identify which IDs are genuine tier variants of one station family, and inspect available native metadata strongly enough to choose a generic grouping rule without hard-coded display strings.
+
+**Existing path checked:** owning-project docs, shared Graveyard Keeper research, pinned decompiled source, and public source examples. Static code proves where the data comes from but does not include the loaded balance rows needed to prove the family taxonomy exhaustively.
+
+**Probe justification:** one read-only, one-shot runtime dump after `MainGame.OnGameStartedPlaying()` can enumerate the exact native `GetItemCraftsIn` lists, station IDs, active localized names, order, craft preset/subtype, object groups and related station metadata. This is lower-risk and more complete than manually inspecting many item tooltips or inferring semantics from a few public examples. It requires no save mutation, no per-frame work, and no production patch.
+
+**Selected research path:** build a separate research-only BepInEx DLL that logs this raw taxonomy once per loaded game session. Do not mutate production source while this gate is blocked.
