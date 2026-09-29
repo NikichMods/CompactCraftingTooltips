@@ -63,13 +63,25 @@ namespace CompactCraftingTooltips
 
     internal static class CraftingLocationFormatter
     {
+        private const string HomeCookingTable1 = "cooking_table";
+        private const string HomeCookingTable2 = "cooking_table_2";
+        private const string RefugeeCookingTable1 = "refugee_camp_cooking_table";
+        private const string RefugeeCookingTable2 = "refugee_camp_cooking_table_2";
+        private const string DistillationCube1 = "mf_distcube_2_clay";
+        private const string DistillationCube2 = "mf_distcube_2_cuprum";
+        private const string AlchemyWorkbench1 = "mf_alchemy_craft_02";
+        private const string AlchemyWorkbench2 = "mf_alchemy_craft_03";
+        private const string ZombieMineFront = "zombie_mine_fence_front";
+        private const string ZombieMineLeftFront = "zombie_mine_fence_left_front";
+
         private static readonly Regex TierSuffix = new Regex(
             @"^(?<base>.+?)\s+(?:\((?<paren>[IVX]+)\)|(?<plain>[IVX]+))$",
             RegexOptions.CultureInvariant);
 
         internal static CompactFormatResult Format(
             IList<CraftLocationEntry> source,
-            string nativeSeparator)
+            string nativeSeparator,
+            string refugeeCampLabel)
         {
             List<CompactDisplayEntry> output =
                 new List<CompactDisplayEntry>();
@@ -83,10 +95,31 @@ namespace CompactCraftingTooltips
 
             while (index < source.Count)
             {
+                int specialEnd;
+                string specialText;
+                int specialSourceCount;
+
+                if (TryBuildSpecial(
+                    source,
+                    index,
+                    separator,
+                    refugeeCampLabel,
+                    out specialEnd,
+                    out specialText,
+                    out specialSourceCount))
+                {
+                    output.Add(new CompactDisplayEntry(
+                        specialText,
+                        specialSourceCount));
+                    changed = true;
+                    index = specialEnd + 1;
+                    continue;
+                }
+
                 int groupEnd;
                 string groupText;
 
-                if (TryBuildGroup(
+                if (TryBuildGenericGroup(
                     source,
                     index,
                     separator,
@@ -125,7 +158,249 @@ namespace CompactCraftingTooltips
             return nativeSeparator;
         }
 
-        private static bool TryBuildGroup(
+        private static bool TryBuildSpecial(
+            IList<CraftLocationEntry> source,
+            int start,
+            string separator,
+            string refugeeCampLabel,
+            out int end,
+            out string text,
+            out int sourceCount)
+        {
+            end = start;
+            text = null;
+            sourceCount = 0;
+
+            if (TryCollapseZombieMineDuplicate(
+                source,
+                start,
+                out end,
+                out text))
+            {
+                sourceCount = end - start + 1;
+                return true;
+            }
+
+            if (TryBuildExactTierPair(
+                source,
+                start,
+                HomeCookingTable1,
+                HomeCookingTable2,
+                separator,
+                out end,
+                out text) ||
+                TryBuildExactTierPair(
+                    source,
+                    start,
+                    DistillationCube1,
+                    DistillationCube2,
+                    separator,
+                    out end,
+                    out text) ||
+                TryBuildExactTierPair(
+                    source,
+                    start,
+                    AlchemyWorkbench1,
+                    AlchemyWorkbench2,
+                    separator,
+                    out end,
+                    out text))
+            {
+                sourceCount = end - start + 1;
+                return true;
+            }
+
+            if (TryBuildRefugeeCookingTable(
+                source,
+                start,
+                separator,
+                refugeeCampLabel,
+                out end,
+                out text,
+                out sourceCount))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryBuildExactTierPair(
+            IList<CraftLocationEntry> source,
+            int start,
+            string firstId,
+            string secondId,
+            string separator,
+            out int end,
+            out string text)
+        {
+            end = start;
+            text = null;
+
+            if (start + 1 >= source.Count ||
+                !string.Equals(
+                    source[start].Id,
+                    firstId,
+                    StringComparison.Ordinal) ||
+                !string.Equals(
+                    source[start + 1].Id,
+                    secondId,
+                    StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            string baseName;
+            int? ignoredTier;
+            ParseVisibleTier(
+                source[start].Name,
+                out baseName,
+                out ignoredTier);
+
+            if (string.IsNullOrEmpty(baseName))
+                return false;
+
+            end = start + 1;
+            text = baseName + " I" + separator + "II";
+            return true;
+        }
+
+        private static bool TryBuildRefugeeCookingTable(
+            IList<CraftLocationEntry> source,
+            int start,
+            string separator,
+            string refugeeCampLabel,
+            out int end,
+            out string text,
+            out int sourceCount)
+        {
+            end = start;
+            text = null;
+            sourceCount = 0;
+
+            if (string.IsNullOrWhiteSpace(refugeeCampLabel))
+                return false;
+
+            CraftLocationEntry current = source[start];
+
+            if (string.Equals(
+                current.Id,
+                RefugeeCookingTable1,
+                StringComparison.Ordinal))
+            {
+                string baseName;
+                int? ignoredTier;
+                ParseVisibleTier(
+                    current.Name,
+                    out baseName,
+                    out ignoredTier);
+
+                if (string.IsNullOrEmpty(baseName))
+                    return false;
+
+                if (start + 1 < source.Count &&
+                    string.Equals(
+                        source[start + 1].Id,
+                        RefugeeCookingTable2,
+                        StringComparison.Ordinal))
+                {
+                    end = start + 1;
+                    sourceCount = 2;
+                    text = refugeeCampLabel +
+                           ": " +
+                           baseName +
+                           " I" +
+                           separator +
+                           "II";
+                    return true;
+                }
+
+                sourceCount = 1;
+                text = refugeeCampLabel +
+                       ": " +
+                       baseName +
+                       " I";
+                return true;
+            }
+
+            if (!string.Equals(
+                current.Id,
+                RefugeeCookingTable2,
+                StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            string secondBase;
+            int? secondTier;
+            ParseVisibleTier(
+                current.Name,
+                out secondBase,
+                out secondTier);
+
+            if (string.IsNullOrEmpty(secondBase))
+                return false;
+
+            sourceCount = 1;
+            text = refugeeCampLabel +
+                   ": " +
+                   secondBase +
+                   " " +
+                   (secondTier.HasValue
+                       ? ToRoman(secondTier.Value)
+                       : "II");
+            return true;
+        }
+
+        private static bool TryCollapseZombieMineDuplicate(
+            IList<CraftLocationEntry> source,
+            int start,
+            out int end,
+            out string text)
+        {
+            end = start;
+            text = null;
+
+            if (start + 1 >= source.Count)
+                return false;
+
+            string firstId = source[start].Id;
+            string secondId = source[start + 1].Id;
+
+            bool exactPair =
+                (string.Equals(
+                    firstId,
+                    ZombieMineFront,
+                    StringComparison.Ordinal) &&
+                 string.Equals(
+                    secondId,
+                    ZombieMineLeftFront,
+                    StringComparison.Ordinal)) ||
+                (string.Equals(
+                    firstId,
+                    ZombieMineLeftFront,
+                    StringComparison.Ordinal) &&
+                 string.Equals(
+                    secondId,
+                    ZombieMineFront,
+                    StringComparison.Ordinal));
+
+            if (!exactPair ||
+                !string.Equals(
+                    source[start].Name,
+                    source[start + 1].Name,
+                    StringComparison.Ordinal) ||
+                string.IsNullOrEmpty(source[start].Name))
+            {
+                return false;
+            }
+
+            end = start + 1;
+            text = source[start].Name;
+            return true;
+        }
+
+        private static bool TryBuildGenericGroup(
             IList<CraftLocationEntry> source,
             int start,
             string separator,
