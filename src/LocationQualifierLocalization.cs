@@ -82,7 +82,7 @@ namespace CompactCraftingTooltips
         {
             Assembly assembly = typeof(LocationQualifierLocalization).Assembly;
             string suffix =
-                ".lang.refugee_camp." +
+                ".refugee_camp." +
                 code +
                 ".txt";
 
