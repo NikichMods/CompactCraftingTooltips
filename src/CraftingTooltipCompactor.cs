@@ -41,7 +41,9 @@ namespace CompactCraftingTooltips
             CompactFormatResult formatted =
                 CraftingLocationFormatter.Format(
                     source,
-                    nativeSeparator);
+                    nativeSeparator,
+                    LocationQualifierLocalization.RefugeeCamp(
+                        GameApi.GetCurrentLanguage()));
 
             if (!formatted.Changed)
                 return;
