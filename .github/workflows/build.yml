@@ -8,6 +8,7 @@ on:
       - main
     paths:
       - 'src/**'
+      - 'lang/**'
       - 'tests/**'
       - 'CompactCraftingTooltips.csproj'
       - 'nuget.config'
@@ -62,8 +63,8 @@ jobs:
           Copy-Item $dll (Join-Path $out 'CompactCraftingTooltips.dll')
           $hash = (Get-FileHash $dll -Algorithm SHA256).Hash.ToLowerInvariant()
           @(
-            'version=0.1.0'
-            'candidate=0.1.0'
+            'version=0.1.1'
+            'candidate=0.1.1'
             'source_sha=${{ github.sha }}'
             "sha256=$hash"
             'assembly=CompactCraftingTooltips.dll'
@@ -73,7 +74,7 @@ jobs:
       - name: Upload candidate
         uses: actions/upload-artifact@v4
         with:
-          name: CompactCraftingTooltips-0.1.0-${{ github.sha }}
+          name: CompactCraftingTooltips-0.1.1-${{ github.sha }}
           path: artifact/*
           if-no-files-found: error
           retention-days: 14
