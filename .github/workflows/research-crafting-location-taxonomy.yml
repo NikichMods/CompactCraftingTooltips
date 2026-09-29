@@ -49,15 +49,16 @@ jobs:
           $dll = Resolve-Path 'research/CraftingLocationTaxonomy/bin/Release/CompactCraftingTooltips.Research.dll'
           $out = Join-Path $PWD 'artifact'
           New-Item -ItemType Directory -Force -Path $out | Out-Null
-          $handed = Join-Path $out 'CompactCraftingTooltips-Research.dll'
+          $handed = Join-Path $out 'CompactCraftingTooltips-Research-r2.dll'
           Copy-Item $dll $handed
           $hash = (Get-FileHash $handed -Algorithm SHA256).Hash.ToLowerInvariant()
           @(
             'probe=crafting-location-taxonomy'
-            'version=0.0.0-research'
+            'handoff=r2'
+            'version=0.0.0'
             'source_sha=${{ github.sha }}'
             "sha256=$hash"
-            'assembly=CompactCraftingTooltips-Research.dll'
+            'assembly=CompactCraftingTooltips-Research-r2.dll'
           ) | Set-Content -Encoding UTF8 (Join-Path $out 'BUILD_IDENTITY.txt')
           Get-Content (Join-Path $out 'BUILD_IDENTITY.txt')
 
