@@ -11,6 +11,8 @@
     <Compile Include="Program.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="..\..\lang\refugee_camp.*.txt" Link="lang\%(Filename)%(Extension)">\n      <LogicalName>CompactCraftingTooltips.%(Filename)%(Extension)</LogicalName>\n    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\lang\refugee_camp.*.txt" Link="lang\%(Filename)%(Extension)">
+      <LogicalName>CompactCraftingTooltips.%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>
