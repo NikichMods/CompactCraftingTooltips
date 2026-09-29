@@ -12,7 +12,7 @@ Purpose: improve the readability of item tooltips by compacting the crafting-loc
 
 Before substantive technical work:
 
-1. inspect the current target repository, including relevant branches, commits, PRs, docs, build state and accepted test evidence;
+1. inspect the current repository, including relevant branches/commits/PRs, docs, build state and accepted test evidence;
 2. read the current local `AGENTS.md`;
 3. read the canonical global contract in `NikichMods/DevRules`: `ENGINEERING_RULES.md`, `CI_POLICY.md`, `GIT_WORKFLOW.md`, `PROJECT_BOOTSTRAP.md`, and `RUNTIME_TEST_HARNESS.md` when runtime evidence is relevant;
 4. apply `LICENSE_POLICY.md`, `CHATGPT_PROJECT_SETUP.md`, and `NEXUS_SUPPORT_WORKFLOW.md` when their subject becomes relevant;
@@ -55,7 +55,7 @@ If a research DLL/harness is needed, keep it clearly separate from production, f
 
 ## User-operation boundary
 
-Use available GitHub, CI, repository and research tools directly. Do not ask the user to perform mechanical Git/build/file-editing work that tools can do.
+Use available GitHub/CI/repository/research tools directly. Do not ask the user to perform mechanical Git/build/file-editing work that tools can do.
 
 Ask the user only for:
 - genuine product/design decisions;
@@ -70,7 +70,7 @@ Use public GitHub Actions on standard hosted runners whenever compilation, tests
 
 Stable installable DLL name: `CompactCraftingTooltips.dll`.
 Repository: `NikichMods/CompactCraftingTooltips`.
-Handoff/download artifact filenames must follow DevRules no-space ASCII-hyphen naming. Record exact source identity for every handed build.
+Handoff filenames follow DevRules no-space ASCII-hyphen naming; record exact source identity. Before every downloadable handoff, re-read the DevRules handoff rules and verify the exact file, filename/version/identity and real path before linking it.
 
 Default original-source license is MPL-2.0 unless the local repository documents a justified exception. Do not commit Graveyard Keeper assemblies, bulk decompiled source, extracted proprietary assets, or other host payloads; persist only derived facts, identifiers, signatures, bounded evidence, and original project/research tooling.
 
