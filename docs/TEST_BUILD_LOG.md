@@ -132,3 +132,50 @@ Minimum runtime acceptance:
 Required human judgment: readability, line breaks, wrapping, clipping, punctuation, and whether the compact block visually fits the rest of the vanilla tooltip.
 
 Do not promote this candidate to stable `main` until the exact DLL above is accepted in the real game.
+
+
+## Production candidate 0.1.1
+
+Status: **awaiting runtime visual acceptance**
+
+Scope added after accepted 0.1.0 visual review:
+- Sweet Home `cooking_table -> cooking_table_2` compacts to `Cooking table I, II`;
+- refugee-camp `refugee_camp_cooking_table -> _2` compacts to a location-qualified family, e.g. `Refugee camp: Cooking table I, II`;
+- the refugee-camp qualifier is mod-owned only because no reusable native full `Refugee camp` GJL key was established; station names themselves remain native localization;
+- `mf_distcube_2_clay -> mf_distcube_2_cuprum` compacts to `Distillation cube I, II`;
+- modern `mf_alchemy_craft_02 -> mf_alchemy_craft_03` compacts to `Alchemy workbench I, II` using the active first-member base text;
+- exact duplicate player-facing zombie-mine pair `zombie_mine_fence_front -> zombie_mine_fence_left_front` collapses to one `Zombie Mine` entry and is explicitly **not** relabeled as tiers;
+- `Professional Kitchen`, `Professional Oven`, `Wooden Anvil`, Stone deposit and Marble quarry remain distinct.
+
+Localization qualifier coverage:
+- English, French, German, Simplified Chinese, Spanish, Brazilian Portuguese, Korean, Japanese, Russian, Italian and Polish;
+- unknown/unsupported locale falls back to English qualifier only;
+- formatter contract mechanically verifies the embedded qualifier resources.
+
+Mechanical verification:
+- GitHub Actions run: `36586934398`
+- workflow run number: `17`
+- job: `test-and-build` — **success**
+- formatter contract: **success**
+- production restore/build: **success**
+- source branch: `dev/0.1.1`
+- exact source SHA: `286a7a36123852b38293107188f91fe21ade7345`
+- artifact ID: `11042695597`
+- installable assembly: `CompactCraftingTooltips.dll`
+- DLL SHA-256: `9621f5f838077a5d23026f8e0a02046c88928c2de5e4004a5a4d6bc9d2f8c6b2`
+- CI artifact zip SHA-256: `9d9d7fd4da11fbd5bc0fceedff8a1e533f29bbab28dfd2a6c7e3d897319e88f1`
+
+Intermediate CI failures before this source identity were build/test-harness resource-embedding issues only; they did not produce a handed production candidate. Run 17 is the first accepted mechanical build for 0.1.1.
+
+Requested runtime acceptance:
+1. replace the previous `CompactCraftingTooltips.dll` with this exact 0.1.1 candidate;
+2. inspect at least one item containing the home Cooking Table pair;
+3. inspect one item containing both home and refugee-camp Cooking Table families if available (for example dough);
+4. inspect one Distillation Cube pair;
+5. inspect one modern Alchemy Workbench I/II pair;
+6. inspect stone for the duplicate Zombie Mine collapse;
+7. return representative screenshots and the complete `BepInEx/LogOutput.log`.
+
+Required human judgment: wording, readability, wrapping/clipping, punctuation, refugee-camp distinction, and whether all unchanged stations still read naturally.
+
+Do not promote 0.1.1 to stable `main` until this exact DLL is accepted in the real game.
