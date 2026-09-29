@@ -124,3 +124,69 @@ Keep distinct. The professional oven belongs to the tavern path and has special 
 ### Sweet Home / refugee-camp cooking stations
 
 Never merge these two canonical families merely because localization can produce the same base display name.
+
+
+## User decisions and follow-up verification — 2026-09-29
+
+The user approved these presentation changes:
+- Sweet Home `cooking_table -> cooking_table_2` may display as one `Cooking table I, II` family, provided collision with the refugee-camp cooking-table family is handled safely.
+- `mf_distcube_2_clay -> mf_distcube_2_cuprum` may display as `Distillation cube I, II`.
+- the actual modern Alchemy Workbench tier pair may display as `Alchemy workbench I, II`.
+- `Professional Kitchen`, `Professional Oven`, and `Wooden Anvil` remain distinct and unmodified.
+
+### Alchemy Workbench identity
+
+Fresh cross-check:
+- current community/mod source used for Graveyard Keeper identifies `mf_alchemy_craft_02` as Alchemy Workbench tier I and `mf_alchemy_craft_03` as tier II;
+- the official wiki likewise documents exactly two player workbenches, tier I (two ingredients) and tier II (three ingredients);
+- `mf_alchemy_craft_01` is a separate legacy/stale balance definition whose localization still says `Alchemy workbench (Tier I)`; it is not the active tier-I station used by modern alchemy UI code.
+
+Production rule:
+- normalize only the exact canonical pair `mf_alchemy_craft_02 -> mf_alchemy_craft_03` to active-localization base + `I, II`;
+- do not merge `mf_alchemy_craft_01` into that family merely because its stale display text contains `Tier I`.
+
+**Gate state: READY** for the exact 02/03 pair.
+
+### Zombie Mine / quarry verification
+
+Pinned 1.407 host code distinguishes three zombie mining interaction object IDs:
+
+- `mine_zombie_bench` — iron production (`mine_zombie_bench_iron_production`);
+- `zombie_mine_fence_left_front` — stone production;
+- `zombie_mine_fence_front` — position-dependent: one placed instance starts stone production, two other placed instances start marble production.
+
+Therefore the left/right/front object IDs are **interaction points / placed instances, not workstation tiers**.
+
+The accepted runtime crafting-location catalogue exposes:
+- stone: `zombie_mine_fence_front -> zombie_mine_fence_left_front -> steep_stone`, both zombie IDs localizing to the same player-facing `Zombie Mine`;
+- marble: `zombie_mine_fence_front -> steep_marble_2`, so the multiple marble-side placed instances are already deduplicated by the vanilla `GetItemCraftsIn` object-definition cache because they share the same canonical object ID.
+
+Production consequence:
+- for the exact stone duplicate pair, collapse the two proven zombie-mine IDs to **one** player-facing `Zombie Mine` entry, preserving its first native position;
+- do **not** relabel the pair as `Zombie Mine I, II`: the host evidence proves they are not tiers;
+- no special marble-side duplicate rule is needed because vanilla already exposes only one `zombie_mine_fence_front` definition for marble;
+- `steep_stone` (Stone deposit) and `steep_marble_2` (Marble quarry) remain separate non-zombie crafting locations and must not be merged with Zombie Mine.
+
+**Gate state: READY** for the exact stone duplicate collapse. No generic same-name deduplication is approved.
+
+### Sweet Home Cooking Table collision policy
+
+Approved production policy:
+- exact home pair `cooking_table -> cooking_table_2` may normalize to `Cooking table I, II`;
+- if the same native list also contains `refugee_camp_cooking_table` and/or `refugee_camp_cooking_table_2`, do not normalize the home pair in a way that produces two indistinguishable `Cooking table I, II` families;
+- the refugee pair remains its own canonical family and may continue to compact generically;
+- `tavern_kitchen` remains Professional Kitchen.
+
+**Gate state: READY** with fail-closed collision guard.
+
+### Distillation Cube
+
+Approved exact alias family:
+- `mf_distcube_2_clay`
+- `mf_distcube_2_cuprum`
+
+Use the active localized base from the first member and display `I, II`. No broader material-suffix inference is approved.
+
+**Gate state: READY**.
+
+No production source has been mutated for these follow-up behaviors yet.
