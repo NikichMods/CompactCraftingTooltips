@@ -23,6 +23,7 @@
   <ItemGroup>
     <EmbeddedResource Include="lang\refugee_camp.*.txt">
       <LogicalName>CompactCraftingTooltips.%(Filename)%(Extension)</LogicalName>
+      <WithCulture>false</WithCulture>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
