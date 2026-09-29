@@ -21,6 +21,7 @@ namespace CompactCraftingTooltips
         private static Type _gameBalanceType;
         private static Type _bubbleTextType;
         private static Type _gjlType;
+        private static Type _gameSettingsType;
 
         private static MemberInfo _gameBalanceMe;
         private static FieldInfo _idField;
@@ -28,6 +29,7 @@ namespace CompactCraftingTooltips
         private static MethodInfo _getItemCraftsIn;
         private static MethodInfo _localize;
         private static MethodInfo _tooltipMethod;
+        private static MethodInfo _getCurrentLanguage;
 
         internal static void Bind()
         {
@@ -36,6 +38,7 @@ namespace CompactCraftingTooltips
             _gameBalanceType = RequireType("GameBalance");
             _bubbleTextType = RequireType("BubbleWidgetTextData");
             _gjlType = RequireType("GJL");
+            _gameSettingsType = RequireType("GameSettings");
 
             _gameBalanceMe = RequireMember(_gameBalanceType, "me", AnyStatic);
             _idField = RequireField(RequireType("BalanceBaseObject"), "id");
@@ -44,6 +47,10 @@ namespace CompactCraftingTooltips
                 _gameBalanceType,
                 "GetItemCraftsIn",
                 new[] { typeof(string) });
+            _getCurrentLanguage = RequireMethod(
+                _gameSettingsType,
+                "GetCurrentLanguage",
+                Type.EmptyTypes);
 
             _localize = FindLocalizationMethod();
 
@@ -79,6 +86,13 @@ namespace CompactCraftingTooltips
                 : _getItemCraftsIn.Invoke(
                     balance,
                     new object[] { itemId }) as IList;
+        }
+
+        internal static string GetCurrentLanguage()
+        {
+            return _getCurrentLanguage.Invoke(
+                null,
+                null) as string ?? string.Empty;
         }
 
         internal static string Localize(string key)
