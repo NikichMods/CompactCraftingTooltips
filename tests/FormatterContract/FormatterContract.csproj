@@ -7,6 +7,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\src\CraftingLocationFormatter.cs" Link="CraftingLocationFormatter.cs" />
+    <Compile Include="..\..\src\LocationQualifierLocalization.cs" Link="LocationQualifierLocalization.cs" />
     <Compile Include="Program.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\lang\refugee_camp.*.txt" Link="lang\%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>
