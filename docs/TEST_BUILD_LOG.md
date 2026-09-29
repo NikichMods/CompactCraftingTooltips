@@ -84,3 +84,51 @@ Returned runtime evidence, 2026-09-29:
 Probe result: **accepted; research question closed for the initial production formatter.**
 
 This research artifact is not a production mod or release candidate.
+
+
+## Production candidate 0.1.0
+
+Status: **awaiting runtime visual acceptance**
+
+Evidence gate: **READY** in `docs/VERIFIED_GAME_DATA.md`.
+
+Candidate behavior:
+- patches only `ItemDefinition.GetTooltipData(Item,bool)`;
+- returns immediately unless `full_detail == true`;
+- reads the same ordered native `GameBalance.GetItemCraftsIn(item_id)` locations as vanilla;
+- groups only contiguous entries that share a terminal-numeric canonical ID family **and** an active-localization base/tier pattern;
+- preserves partial families such as `II, III`;
+- leaves renamed, reversed, mismatched, or unsupported runs unchanged;
+- does not patch `GetTooltipDataCraftAt` or the `TechUnlock` `full_detail=false` path;
+- no save, recipe, station, item-data, trading, research, or progression mutation;
+- no per-frame work;
+- production logging is startup-only unless the compactor throws, in which case the first failure is logged once and vanilla text is left unchanged.
+
+Layout policy for this candidate:
+- one compact family remains on the normal `Crafted at` line;
+- when every displayed entry is a grouped family and there are at least two families, the localized `Crafted at` heading is placed on its own line and each compact family is placed on its own following line;
+- mixed grouped + unrelated station lists stay inline and use the active localized list separator;
+- ASCII comma/semicolon separators receive a trailing space for readability; non-ASCII localized separators are preserved as provided by the game.
+
+Mechanical verification:
+- GitHub Actions run: `36574067893`
+- job: `test-and-build` — **success**
+- formatter contract step: **success**
+- production build step: **success**
+- source branch: `dev/0.1.0`
+- exact source SHA: `e16767986e2933d36a325c096101947a871ccfbe`
+- artifact ID: `11036638165`
+- installable assembly: `CompactCraftingTooltips.dll`
+- DLL SHA-256: `5e8c9ab20837c2d3c21b6428745b756b219089a616f90a9980091e8d4569d477`
+
+Minimum runtime acceptance:
+1. remove the research-only `CompactCraftingTooltips-Research-r2.dll`;
+2. install this exact `CompactCraftingTooltips.dll`;
+3. inspect a beet/carrot/wheat tooltip that exposes Zombie Farm I–III + Garden Bed I–III;
+4. inspect one partial-quality crop tooltip that exposes only II–III;
+5. inspect one unrelated/mixed crafting-location tooltip if convenient;
+6. return screenshots of the representative tooltip(s) and the complete `BepInEx/LogOutput.log`.
+
+Required human judgment: readability, line breaks, wrapping, clipping, punctuation, and whether the compact block visually fits the rest of the vanilla tooltip.
+
+Do not promote this candidate to stable `main` until the exact DLL above is accepted in the real game.
