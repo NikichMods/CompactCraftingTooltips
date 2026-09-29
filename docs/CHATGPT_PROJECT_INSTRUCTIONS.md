@@ -6,7 +6,7 @@ Repository: `NikichMods/CompactCraftingTooltips`
 Runtime: Windows PC, Graveyard Keeper 1.407, BepInEx 5.
 Shared host/runtime research: `NikichMods/GraveyardKeeperResearch`, starting with `docs/RESEARCH_INDEX.md`.
 
-Purpose: improve the readability of item tooltips by compacting the crafting-location block. The initial product goal is to replace long repeated station lists such as multiple tiered variants of the same station with short grouped lines, e.g. `Zombie Farm I, II, III` and `Garden Bed I, II, III`. The mod is presentation-only unless the user explicitly approves a broader scope. Do not change recipes, availability, progression, research rewards, station behavior, item mechanics, buying/selling data, or unrelated tooltip sections.
+Purpose: compact the item-tooltip crafting-location block, e.g. `Zombie Farm I, II, III` and `Garden Bed I, II, III`. This is presentation-only unless the user approves broader scope. Preserve recipes/availability, progression/research rewards, station behavior, item mechanics, buying/selling data and unrelated tooltip sections.
 
 ## Mandatory startup / recovery
 
@@ -24,7 +24,7 @@ If the repository is new or incomplete, bootstrap it according to DevRules. Crea
 
 ## Engineering behavior
 
-Keep the user-visible outcome separate from the first implementation idea. When materially different mechanisms could satisfy the same result, compare the useful solution families before substantial implementation or research, choose the least-complex adequate mechanism, and re-open that choice if the selected path fails or materially increases host/runtime uncertainty.
+Keep the user-visible outcome separate from the first implementation idea. Compare materially different useful mechanisms before substantial work, choose the least-complex adequate one, and re-open the choice if it fails or materially increases host/runtime uncertainty.
 
 For this mod, do not assume how tooltip text is assembled. Establish from evidence the actual owner of the crafting-location block, its data source, localization path, ordering, final writer/consumer, layout behavior, and all known callers/surfaces affected by any formatter or hook before production code relies on them.
 
@@ -41,13 +41,13 @@ Before the first production-source mutation for each materially independent beha
 
 There is no small, obvious, presentation-only, or follow-up exception. **BLOCKED means research/probe only.**
 
-Treat the reported request as the default scope. Adjacent tooltip wording, mechanics, layout, research behavior, buying/selling information, item data, localization, and compatibility behavior are preserved unless the proved path requires changing them or the user separately approves that additional change.
+Treat the reported request as default scope. Preserve adjacent wording, mechanics, layout, research behavior, buying/selling data, item data, localization and compatibility unless the proved path requires change or the user separately approves it.
 
 Several independently READY changes may share one coherent candidate if combined acceptance remains attributable. Do not bundle BLOCKED or independently unverified mechanisms merely to reduce user test cycles. Numbered handoff artifacts are immutable; changed behavior after handoff requires a new version.
 
 ## Research and runtime testing
 
-Before creating new probe/harness code, state the exact uncertainty, check whether accepted evidence, direct inspection, an existing exact artifact, or one short deterministic runtime action can answer it, and justify a probe only when it is cleaner or more reliable. Prefer the lowest combined evidence complexity and error risk.
+Before new probe/harness code, state the uncertainty; first check accepted evidence, direct inspection, an existing exact artifact or one short deterministic runtime action. Use a probe only when cleaner/more reliable. Prefer the lowest combined evidence complexity and error risk.
 
 Use automated checks for mechanical properties. Use the user's real game for visual readability, wrapping, line breaks, clipping, localization appearance, interaction feel, or other perceptual properties.
 
@@ -66,7 +66,7 @@ Ask the user only for:
 
 Use `main` as the stable line unless local evidence establishes another rule. Keep unaccepted runtime work on dev/research branches.
 
-Use public GitHub Actions on standard hosted runners whenever compilation, tests, reproducible artifacts, or research-harness builds are useful. Do not artificially conserve public standard-runner minutes.
+Use public standard GitHub-hosted runners whenever builds/tests/reproducible artifacts/research harnesses are useful; do not artificially conserve their minutes.
 
 Stable installable DLL name: `CompactCraftingTooltips.dll`.
 Repository: `NikichMods/CompactCraftingTooltips`.
@@ -76,12 +76,12 @@ Default original-source license is MPL-2.0 unless the local repository documents
 
 For stable public distribution, follow DevRules release and Nexus support policy. Do not rebuild different bytes under the same version.
 
-## New chats and reporting
+## Conversation continuity / new chats
 
-No special first-message handoff is required inside this ChatGPT Project. Recover current state from GitHub and canonical evidence before substantive work.
+Treat GitHub/canonical evidence as durable project memory, not the chat transcript. At natural decision/evidence boundaries, checkpoint state that future work will rely on; do not record every brainstorm/message.
 
-After a substantial iteration, report briefly:
-- what was unknown;
-- what is now proved or changed;
-- what remains open;
-- whether the user needs to perform any runtime test, and exactly which one.
+Before a planned chat move, persist material uncheckpointed decisions/evidence first, then make any handoff message a concise convenience layer with the live delta and next step. If a chat ends unexpectedly, recover from GitHub/canonical evidence and do not guess a material missing decision.
+
+No special first-message handoff is required inside this Project. Recover current state before substantive work.
+
+After a substantial iteration, report briefly what was unknown, what is now proved/changed, what remains open, and any exact runtime test the user must perform.
