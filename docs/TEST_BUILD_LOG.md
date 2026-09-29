@@ -179,3 +179,30 @@ Requested runtime acceptance:
 Required human judgment: wording, readability, wrapping/clipping, punctuation, refugee-camp distinction, and whether all unchanged stations still read naturally.
 
 Do not promote 0.1.1 to stable `main` until this exact DLL is accepted in the real game.
+
+
+## Runtime acceptance — 0.1.1
+
+Status: **ACCEPTED**
+
+Accepted by the user after real-game testing on Graveyard Keeper 1.407 (Steam, Windows) with the user's normal mod set.
+
+Evidence:
+- BepInEx loaded `Compact Crafting Tooltips 0.1.1` successfully.
+- The session's mod summary reported `Compact Crafting Tooltips v0.1.1`.
+- No `Crafting-location compaction failed` or `failed to initialize` entry occurred in the returned complete log.
+- The returned screenshot for sweet dough showed the intended simultaneous distinction:
+  - `Кухонный стол I, II`
+  - `Лагерь беженцев: Кухонный стол I, II`
+  - `Профессиональная кухня`
+  with readable wrapping and no clipping.
+- The user reported no problems across the other requested spot checks and explicitly accepted the candidate for stable promotion.
+
+Accepted exact candidate identity:
+- version: `0.1.1`
+- source SHA: `286a7a36123852b38293107188f91fe21ade7345`
+- CI run: `36586934398`
+- artifact ID: `11042695597`
+- DLL SHA-256: `9621f5f838077a5d23026f8e0a02046c88928c2de5e4004a5a4d6bc9d2f8c6b2`
+
+Note: an exact host-build compatibility guard was discussed separately after this candidate was built. It is **not** present in 0.1.1 and is not part of the accepted runtime behavior above. Adding such a guard would be a separate behavior change requiring an explicit decision and a new candidate identity before release.
