@@ -32,3 +32,8 @@ The candidate lines are diagnostic conveniences, not proof that a numeric suffix
 Install only the built research DLL in `BepInEx/plugins`, load any save to normal gameplay once, then return the complete `BepInEx/LogOutput.log`.
 
 The relevant block is delimited by `CCT_RESEARCH_START` and `CCT_RESEARCH_DONE`.
+
+
+## Handoff compatibility note
+
+BepInEx 5 requires the version in `[BepInPlugin]` to be numeric/System.Version-parseable. The first research handoff used `0.0.0-research` and was rejected before `Awake()` ran. Research handoff **r2** uses numeric plugin/binary version `0.0.0`; the human-facing research identity is tracked outside BepInEx metadata.
