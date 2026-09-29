@@ -206,3 +206,44 @@ Accepted exact candidate identity:
 - DLL SHA-256: `9621f5f838077a5d23026f8e0a02046c88928c2de5e4004a5a4d6bc9d2f8c6b2`
 
 Note: an exact host-build compatibility guard was discussed separately after this candidate was built. It is **not** present in 0.1.1 and is not part of the accepted runtime behavior above. Adding such a guard would be a separate behavior change requiring an explicit decision and a new candidate identity before release.
+
+
+## Conversation checkpoint — next compatibility/logging hardening
+
+Status: **design direction accepted; no production mutation yet**
+
+The user explicitly accepted production candidate 0.1.1 in real Graveyard Keeper 1.407, but then deferred stable promotion/release until compatibility and support-diagnostics hardening is complete. Do **not** merge/release 1.0.0 yet; the user will make that decision separately after the next candidate is accepted.
+
+Accepted direction for the next production candidate:
+
+- use capability-first, identity-aware compatibility;
+- known Graveyard Keeper 1.407 Assembly-CSharp MVID `6f50b8e7-156b-49ac-bbe8-7505894b2364` is reported as verified;
+- a different/unknown host identity lowers confidence but does not by itself block this presentation-only feature;
+- resolve/check only the exact runtime contract CCT needs at startup and cache it; no repeated MVID/reflection scans in tooltip/hot paths;
+- if a required contract is absent, fail closed at the CCT boundary and preserve vanilla behavior; do not guess alternate hooks or fuzzy-discover replacement APIs;
+- if a contract-breaking runtime exception occurs after startup, preserve the vanilla tooltip and trip a one-session circuit breaker so CCT stops retrying that feature until restart;
+- log the failure/containment once rather than on every tooltip;
+- keep compatibility code local and small; do not introduce a shared runtime framework merely for this mod;
+- accepted 0.1.1 formatting/localization/order behavior must remain unchanged on the verified 1.407 host.
+
+Support-log direction:
+- normal startup should be sparse and identify component/version plus host compatibility status;
+- unknown host should produce one concise unverified/best-effort warning;
+- a disabled/contained feature should report what failed and what fallback/action occurred (for example `fallback=vanilla`, `action=disabled-for-session`);
+- no per-tooltip success logging or recurring failure spam.
+
+Verification direction:
+- prove project-owned compatibility/failure-state logic with deterministic automated tests first;
+- use narrow controlled fault injection only if a real integration boundary cannot be proved by ordinary tests;
+- use the user's real 1.407 game only for the remaining runtime assertion, expected to be a short startup/tooltip sanity check plus the ordinary `LogOutput.log` if lower layers already prove the negative paths;
+- do not attempt to simulate every possible future Graveyard Keeper version.
+
+Known deferred issue from 0.1.1:
+- `CraftingTooltipCompactor.TryCompact` currently returns before formatting when the native location count is below two, while the formatter itself can qualify a singleton refugee-camp cooking-table entry. Current accepted collision cases contain multiple locations. Any singleton-behavior change is a separate future behavior gate; do not silently fold it into compatibility hardening.
+
+Next step after chat recovery:
+1. perform the normal DevRules/repository/shared-research startup inspection;
+2. re-verify the exact 0.1.1 source/runtime baseline and current compatibility seam;
+3. create the reviewable evidence gate for compatibility/logging hardening before the first production-source mutation;
+4. implement as a new candidate identity (0.1.1 is immutable; `0.1.2` is the expected next candidate unless current repository evidence establishes a better version);
+5. build/test in CI and hand over only after the DevRules artifact-handoff integrity check.
