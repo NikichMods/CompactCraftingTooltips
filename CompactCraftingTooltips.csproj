@@ -4,7 +4,7 @@
     <LangVersion>7.3</LangVersion>
     <AssemblyName>CompactCraftingTooltips</AssemblyName>
     <RootNamespace>CompactCraftingTooltips</RootNamespace>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Optimize>true</Optimize>
     <DebugType>none</DebugType>
@@ -18,6 +18,10 @@
     <Compile Include="src\GameApi.cs" />
     <Compile Include="src\CraftingLocationFormatter.cs" />
     <Compile Include="src\CraftingTooltipCompactor.cs" />
+    <Compile Include="src\LocationQualifierLocalization.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="lang\refugee_camp.*.txt" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BepInEx.BaseLib" Version="5.4.21" />
