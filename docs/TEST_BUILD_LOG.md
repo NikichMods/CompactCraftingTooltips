@@ -27,9 +27,9 @@ Returned runtime evidence, 2026-09-29:
 
 This artifact remains immutable and must not be reused.
 
-### Research handoff r2 — awaiting runtime evidence
+### Research handoff r2 — accepted runtime evidence
 
-Status: **awaiting runtime evidence**
+Status: **accepted**
 
 Correction:
 - BepInEx plugin metadata version changed to numeric `0.0.0`.
@@ -73,6 +73,14 @@ Expected diagnostic markers:
 - zero or more `CCT_SUFFIX_CANDIDATE`
 - `CCT_RESEARCH_DONE`
 
-Acceptance condition for the probe itself: it reaches `CCT_RESEARCH_DONE` without `CCT_RESEARCH_ERROR` and the returned data is sufficient to classify genuine station families or establish that another evidence step is required.
+Returned runtime evidence, 2026-09-29:
+- plugin loaded successfully under BepInEx 5.4.23.5;
+- `CCT_RESEARCH_START game_version="1.407" language="ru" items=1157`;
+- probe completed with `items_with_locations=702`, `items_with_multiple_locations=511`, `unique_stations=79`, `raw_links=1402`, `suffix_candidate_families=11`;
+- no `CCT_RESEARCH_ERROR`;
+- no save or UI mutation;
+- data was sufficient to reject numeric-suffix-only grouping and to select a fail-closed native-ID + localized-name compatibility rule for production.
+
+Probe result: **accepted; research question closed for the initial production formatter.**
 
 This research artifact is not a production mod or release candidate.
