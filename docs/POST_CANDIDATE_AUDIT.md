@@ -190,3 +190,50 @@ Use the active localized base from the first member and display `I, II`. No broa
 **Gate state: READY**.
 
 No production source has been mutated for these follow-up behaviors yet.
+
+
+## Refugee-camp qualifier decision — 2026-09-29
+
+The user approved replacing the earlier collision guard with an explicit location qualifier:
+
+- Sweet Home pair -> `Cooking table I, II`
+- refugee-camp pair -> `Refugee camp: Cooking table I, II`
+
+This is preferable to inventing a new station name such as `Refugee cooking table`: it composes an established location term with the station's existing active-language name.
+
+### Localization evidence
+
+The game's supported interface languages are English, French, German, Simplified Chinese, Spanish, Brazilian Portuguese, Korean, Japanese, Russian, Italian, and Polish.
+
+Public 1.407-derived localization data exposes the station names themselves and general refugee/camp terminology, but no standalone reusable `Refugee camp` key was found in the inspected English localization dump. The existing native `zone_camp` label is only `Camp` and refers to the separate gypsy camp, so it must not be reused as the qualifier.
+
+Published Graveyard Keeper localization/official-store terminology establishes the location wording itself, including:
+- English: `Refugee camp`
+- German: `Flüchtlingslager`
+- Spanish: `Campamento de refugiados`
+- French: `Camp de réfugiés`
+- Russian: `Лагерь беженцев`
+- Brazilian Portuguese: `Acampamento de refugiados`
+- Polish: `Obóz uchodźców`
+- Simplified Chinese: `难民营`
+- Korean: `난민캠프`
+- Japanese: `難民の野営地`
+- Italian: `Campo profughi`
+
+Because no single native GJL key was established for the full location name, the qualifier will be a minimal mod-owned localization resource. The actual `Cooking table` text remains native `GJL.L(refugee_camp_cooking_table*)`; the mod does not duplicate vanilla station translations.
+
+**Observable property:** refugee-camp cooking stations are visibly distinguishable from the Sweet Home cooking-table family in every supported language.
+
+**Canonical owner:** same verified `ItemDefinition.GetTooltipData -> GameBalance.GetItemCraftsIn` data path; canonical station identity is the exact `refugee_camp_cooking_table*` IDs.
+
+**Final writer / consumer:** same verified `BubbleWidgetTextData.text -> BubbleWidgetText.Draw` path.
+
+**Blast radius:** full-detail item tooltips containing either refugee-camp cooking-table ID. No global localization resource is modified.
+
+**Preserved invariants:** native station membership/order; native station names; all non-refugee stations; professional kitchen/oven; recipes and mechanics; active-language behavior with English fallback only for an unknown unsupported locale.
+
+**Acceptance evidence:** formatter contract cases for refugee pair, refugee tier-II-only, home+refugee+professional kitchen, and all approved special families; runtime visual checks in English and Russian.
+
+**Gate state: READY.**
+
+Production source may now implement the approved 0.1.1 follow-up behavior.
