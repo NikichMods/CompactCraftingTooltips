@@ -17,7 +17,7 @@ namespace CompactCraftingTooltips.Research
     {
         public const string PluginGuid = "nikich.gyk.compactcraftingtooltips.research";
         public const string PluginName = "Compact Crafting Tooltips Research";
-        public const string PluginVersion = "0.0.0-research";
+        public const string PluginVersion = "0.0.0";
 
         internal static ManualLogSource Log;
         private Harmony _harmony;
