@@ -125,3 +125,78 @@ The production gate therefore remains **BLOCKED** only on the semantic grouping/
 **Probe justification:** one read-only, one-shot runtime dump after `MainGame.OnGameStartedPlaying()` can enumerate the exact native `GetItemCraftsIn` lists, station IDs, active localized names, order, craft preset/subtype, object groups and related station metadata. This is lower-risk and more complete than manually inspecting many item tooltips or inferring semantics from a few public examples. It requires no save mutation, no per-frame work, and no production patch.
 
 **Selected research path:** build a separate research-only BepInEx DLL that logs this raw taxonomy once per loaded game session. Do not mutate production source while this gate is blocked.
+
+
+## Runtime taxonomy findings — research handoff r2
+
+**Status:** accepted runtime evidence for Graveyard Keeper 1.407, Russian localization.
+
+Exact research identity:
+- source branch: `research/crafting-location-taxonomy`
+- source SHA: `94088d20dcb507e0f7319db384321336346e4a4e`
+- CI run: `36571564735`
+- artifact ID: `11033843702`
+- handed DLL: `CompactCraftingTooltips-Research-r2.dll`
+- DLL SHA-256: `9b58d535af23ae1fc11cb0f39a06c44cdbc4fe6517ce418b0756f4f3c6345217`
+- returned runtime: Graveyard Keeper 1.407, BepInEx 5.4.23.5, language `ru`.
+
+The probe completed successfully with:
+- `items_with_locations=702`;
+- `items_with_multiple_locations=511`;
+- `unique_stations=79`;
+- `raw_links=1402`;
+- `suffix_candidate_families=11`;
+- no save or UI mutation.
+
+### What the live data proves
+
+1. The reported farm case is exactly present in canonical native order:
+   - `zombie_garden_desk_0/1/2` -> `Зомби-ферма`, `Зомби-ферма II`, `Зомби-ферма III`;
+   - `refugee_camp_garden_bed_1/2/3` -> `Грядка`, `Грядка II`, `Грядка III`.
+2. Higher-quality crop variants can legitimately expose only a suffix of a family, for example tiers II+III or only III. The formatter must compact only the locations actually present and must not synthesize unavailable tiers.
+3. Numeric station-ID suffixes alone are not semantically safe:
+   - `mf_anvil_1/2/3` localize as `Деревянная наковальня`, `Наковальня`, `Наковальня II`;
+   - `mf_alchemy_craft_01/02/03` localize as `Алхимический верстак (I)`, `Алхимический стол`, `Алхимический стол II`.
+   Therefore "same numeric ID stem" is only a candidate-family signal, not sufficient proof to merge all members into one visible family.
+4. Conversely, live data contains safe presentation pairs/runs in which canonical IDs share a structural family and active localized names share one visible base plus Roman tier suffixes. Examples include furnaces, preparation tables, workbenches, zombie farms, refugee garden beds, desks, refugee cooking tables, embalming tables and others.
+5. A fail-closed formatter can therefore use **both** canonical ID-family continuity and active localized-name compatibility. It may group only a contiguous, order-preserving run whose visible names prove the same base/tier sequence; otherwise it leaves the vanilla entries unchanged.
+6. This avoids a manual Russian station-name table and avoids claiming that every numeric suffix is a tier. It also degrades safely in another localization: if the active localized names do not expose a compatible tier pattern, the affected entries remain vanilla rather than being guessed.
+
+One observed safe false-negative is acceptable for the initial implementation: `mf_distcube_2_clay` / `mf_distcube_2_cuprum` display as `Дистилляционный куб` / `Дистилляционный куб II` but do not share the generic terminal-numeric ID family. The initial formatter should not add a hard-coded exception merely to compact that pair.
+
+## Solution-space checkpoint — initial production formatter
+
+Useful solution families considered:
+
+1. **Numeric ID suffix only.** Rejected: live anvil/alchemy data proves false semantic merges.
+2. **Manual station-family table.** Not selected: it would be more brittle and broader to maintain, and the current product goal can be met from native IDs plus active localization without a per-language display table.
+3. **Localized display text only.** Not selected by itself: two unrelated canonical stations could theoretically localize to similar visible names.
+4. **Canonical ID-family guard + localized semantic/tier compatibility, fail closed.** Selected. This uses native station identity to constrain grouping and native active-language text to prove that the visible entries form one tier family.
+
+The selected formatter:
+- consumes the same ordered `GetItemCraftsIn` list as vanilla;
+- never adds, removes or reorders underlying locations;
+- compacts only contiguous compatible runs;
+- preserves partial families such as `II, III`;
+- leaves reversed/nonsequential/renamed/mismatched runs unchanged;
+- does not mutate recipes, station definitions, localization resources or item data.
+
+## Production evidence gate — compact crafting-location behavior
+
+**Observable property:** standard full-detail item tooltips compact repeated compatible station tiers while representing exactly the same ordered native crafting locations.
+
+**Canonical owner:** `ItemDefinition.GetTooltipData(Item, bool)` constructs the row from `GetItemDetails().crafts_in`, whose canonical source is `GameBalance.GetItemCraftsIn(item_id)`.
+
+**Final writer / consumer:** the returned `BubbleWidgetTextData.text` is consumed by `BubbleWidgetText.Draw`, which assigns the final label text. The enclosing `WidgetsBubbleGUI` owns geometry only.
+
+**Chosen seam / blast radius:** postfix `ItemDefinition.GetTooltipData`, guarded to `full_detail == true`. In the pinned 1.407 callers this targets the standard `BaseItemCellGUI` item-tooltip path and deliberately leaves the `TechUnlock` `full_detail=false` path and `GetTooltipDataCraftAt` helper unchanged.
+
+**Preserved invariants:** native location membership and order; recipes/availability; progression; research rewards; station behavior; item mechanics/data; trading data; unrelated tooltip rows; technology-unlock crafting-location presentation; active-language station names; no per-frame work.
+
+**Mechanical acceptance:** formatter contract tests must cover full I/II/III families, II/III subsets, renamed members, reversed order, mixed families, and no-change fallbacks; production row replacement must occur only when the exact vanilla crafting row is found and at least one safe grouping was produced.
+
+**Runtime acceptance:** real-game inspection of representative full-detail item tooltips must confirm readability, wrapping, clipping, punctuation and that unrelated tooltip sections remain unchanged.
+
+**Gate state: READY.**
+
+Production implementation may now proceed on a dev branch. Runtime visual acceptance is still required before promotion to stable `main`.
