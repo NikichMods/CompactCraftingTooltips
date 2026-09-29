@@ -21,7 +21,9 @@
     <Compile Include="src\LocationQualifierLocalization.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="lang\refugee_camp.*.txt">\n      <LogicalName>CompactCraftingTooltips.%(Filename)%(Extension)</LogicalName>\n    </EmbeddedResource>
+    <EmbeddedResource Include="lang\refugee_camp.*.txt">
+      <LogicalName>CompactCraftingTooltips.%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BepInEx.BaseLib" Version="5.4.21" />
