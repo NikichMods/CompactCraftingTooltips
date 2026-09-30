@@ -309,7 +309,7 @@ Gate state: **READY**.
 
 ## Production candidate 0.1.2
 
-Status: **awaiting corrected runtime sanity candidate**
+Status: **awaiting runtime sanity acceptance**
 
 Pre-handoff correction:
 - CI run `36649562784` / source `482a1869044a96228e968c9df28ad99e1306b4f0` built successfully but was **rejected before handoff** by final static review;
@@ -339,16 +339,16 @@ Exact startup contract:
 
 Mechanical verification:
 - source branch: `dev/0.1.2`;
-- exact candidate source SHA: `482a1869044a96228e968c9df28ad99e1306b4f0`;
-- GitHub Actions run: `36649562784`;
-- workflow run number: `19`;
+- exact candidate source SHA: `cdcafde9148fcc0693d2c8a422543deab4312670`;
+- GitHub Actions run: `36649869293`;
+- workflow run number: `20`;
 - job: `test-and-build` — **success**;
 - formatter + compatibility contract harness: `FORMATTER_CONTRACT_OK checks=72`;
 - production build: **success**;
-- artifact ID: `11069629520`;
-- CI artifact digest: `sha256:a0da69f6c9a1e2733f13438173197a46abd6d9043286a8e7c0c4f71464228898`;
+- artifact ID: `11069619872`;
+- CI artifact digest: `sha256:fa6e6b5271824240e578242167695ee225446ef911582e60becf8b505c7330e1`;
 - installable assembly: `CompactCraftingTooltips.dll`;
-- candidate DLL SHA-256: `45ef87fefa7560efdca66ab1bfb62b746964506cbc0f77e39c57f33224c1c26f`;
+- candidate DLL SHA-256: `ff002753d85cbd9ad5e705320736729e9d89b1c6c7d5d343b864337bb6663970`;
 - handoff filename: `CompactCraftingTooltips-0.1.2.dll`.
 
 Defensive verification decision:
