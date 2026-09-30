@@ -282,7 +282,7 @@ Additional runtime contract evidence:
   - module MVID: `7b81560f-fee5-4bdd-ac8c-058e486c8a3f`;
   - `GJL.L` method RID 219 is public static and has exact signature `string L(string lng_id)`;
   - the same type also contains multiple 2–4 argument `L` overloads, so production must bind the exact one-argument signature and must not retain the previous compatible-overload fallback scan.
-- pinned 1.407 `GameBalance.me` is a public static property, so the previous field/property fallback is not part of the required production contract.
+- pinned 1.407 `GameBalance.me` is a public static field, so the previous field/property fallback is not part of the required production contract.
 
 Blast radius:
 - startup host identity telemetry;
@@ -309,7 +309,13 @@ Gate state: **READY**.
 
 ## Production candidate 0.1.2
 
-Status: **awaiting runtime sanity acceptance**
+Status: **awaiting corrected runtime sanity candidate**
+
+Pre-handoff correction:
+- CI run `36649562784` / source `482a1869044a96228e968c9df28ad99e1306b4f0` built successfully but was **rejected before handoff** by final static review;
+- reason: that source incorrectly required `GameBalance.me` as a property, while pinned 1.407 source defines it as `public static GameBalance me;`;
+- those bytes were never handed to the user and are not the 0.1.2 candidate of record;
+- corrected source begins at `cdcafde9148fcc0693d2c8a422543deab4312670`; final CI/artifact identity follows after its build completes.
 
 Scope:
 - compatibility and support-logging hardening only;
@@ -324,7 +330,7 @@ Scope:
 
 Exact startup contract:
 - `Assembly-CSharp:ItemDefinition.GetTooltipData(Item,bool) -> IList-compatible`;
-- `Assembly-CSharp:GameBalance.me` public static property;
+- `Assembly-CSharp:GameBalance.me` public static `GameBalance` field;
 - `Assembly-CSharp:GameBalance.GetItemCraftsIn(string) -> IList-compatible`;
 - `Assembly-CSharp:BalanceBaseObject.id` public instance `string` field;
 - `Assembly-CSharp:BubbleWidgetTextData.text` public instance `string` field;
