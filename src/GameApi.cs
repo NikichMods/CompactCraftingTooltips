@@ -45,6 +45,7 @@ namespace CompactCraftingTooltips
             }
         }
 
+        // Resolve the exact host contract once before Harmony installation.
         internal static void Bind()
         {
             Assembly gameAssembly =
