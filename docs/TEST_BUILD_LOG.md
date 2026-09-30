@@ -305,3 +305,59 @@ Acceptance evidence:
 5. final real-game evidence is limited to a short 1.407 startup + representative tooltip sanity check and ordinary `LogOutput.log`.
 
 Gate state: **READY**.
+
+
+## Production candidate 0.1.2
+
+Status: **awaiting runtime sanity acceptance**
+
+Scope:
+- compatibility and support-logging hardening only;
+- accepted 0.1.1 formatter, localization resources, native station ordering, row matching, and layout logic are unchanged;
+- exact startup contract binding replaces broad/fallback reflection discovery;
+- verified Graveyard Keeper 1.407 `Assembly-CSharp` MVID is recognized as trusted identity telemetry;
+- an unknown MVID is logged once as unverified/best-effort but does not block activation when the exact contract is present;
+- a missing required contract fails closed before Harmony installation, leaving vanilla behavior;
+- after activation, the first unexpected compaction exception trips a one-session circuit breaker, logs containment once, and prevents further compaction attempts until restart;
+- no MVID lookup or reflection scan/check is performed in the tooltip hot path;
+- singleton refugee-camp behavior remains unchanged and out of scope.
+
+Exact startup contract:
+- `Assembly-CSharp:ItemDefinition.GetTooltipData(Item,bool) -> IList-compatible`;
+- `Assembly-CSharp:GameBalance.me` public static property;
+- `Assembly-CSharp:GameBalance.GetItemCraftsIn(string) -> IList-compatible`;
+- `Assembly-CSharp:BalanceBaseObject.id` public instance `string` field;
+- `Assembly-CSharp:BubbleWidgetTextData.text` public instance `string` field;
+- `Assembly-CSharp:GameSettings.GetCurrentLanguage() -> string`;
+- `Assembly-CSharp-firstpass:GJL.L(string) -> string`.
+
+Mechanical verification:
+- source branch: `dev/0.1.2`;
+- exact candidate source SHA: `482a1869044a96228e968c9df28ad99e1306b4f0`;
+- GitHub Actions run: `36649562784`;
+- workflow run number: `19`;
+- job: `test-and-build` — **success**;
+- formatter + compatibility contract harness: `FORMATTER_CONTRACT_OK checks=72`;
+- production build: **success**;
+- artifact ID: `11069629520`;
+- CI artifact digest: `sha256:a0da69f6c9a1e2733f13438173197a46abd6d9043286a8e7c0c4f71464228898`;
+- installable assembly: `CompactCraftingTooltips.dll`;
+- candidate DLL SHA-256: `45ef87fefa7560efdca66ab1bfb62b746964506cbc0f77e39c57f33224c1c26f`;
+- handoff filename: `CompactCraftingTooltips-0.1.2.dll`.
+
+Defensive verification decision:
+- no runtime fault-injection harness is added for this candidate;
+- project-owned identity classification and circuit-breaker/log-once state are covered deterministically in CI;
+- fail-closed startup ordering is structurally enforced because the Harmony patch is installed only after the complete exact contract bind succeeds;
+- the remaining real integration assertion is therefore the ordinary verified-1.407 startup/bind/patch path plus one representative tooltip.
+
+Requested runtime sanity:
+1. replace the previous production DLL with this exact 0.1.2 candidate;
+2. launch Graveyard Keeper 1.407 and load a normal save;
+3. inspect one previously accepted tooltip that CCT compacts and confirm its visible output is unchanged from 0.1.1;
+4. exit normally and return the complete `BepInEx/LogOutput.log`.
+
+Expected verified-host startup marker:
+`Compact Crafting Tooltips 0.1.2 active; host=verified-gk-1.407; assembly-csharp-mvid=6f50b8e7-156b-49ac-bbe8-7505894b2364; contract=ok.`
+
+Do not promote 0.1.2 to `main`, 1.0.0, or a public release until the user separately accepts this exact candidate.
