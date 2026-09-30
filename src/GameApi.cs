@@ -22,7 +22,7 @@ namespace CompactCraftingTooltips
         private static Type _gjlType;
         private static Type _gameSettingsType;
 
-        private static PropertyInfo _gameBalanceMe;
+        private static FieldInfo _gameBalanceMe;
         private static FieldInfo _idField;
         private static FieldInfo _bubbleTextField;
         private static MethodInfo _getItemCraftsIn;
@@ -69,9 +69,10 @@ namespace CompactCraftingTooltips
             _gjlType =
                 RequireType(firstpassAssembly, "GJL");
 
-            _gameBalanceMe = RequireStaticProperty(
+            _gameBalanceMe = RequireField(
                 _gameBalanceType,
                 "me",
+                PublicStatic,
                 _gameBalanceType);
 
             _idField = RequireField(
@@ -130,7 +131,7 @@ namespace CompactCraftingTooltips
         internal static IList GetItemCraftsIn(string itemId)
         {
             object balance =
-                _gameBalanceMe.GetValue(null, null);
+                _gameBalanceMe.GetValue(null);
 
             return balance == null
                 ? null
@@ -252,32 +253,6 @@ namespace CompactCraftingTooltips
             }
 
             return field;
-        }
-
-        private static PropertyInfo RequireStaticProperty(
-            Type type,
-            string name,
-            Type expectedType)
-        {
-            PropertyInfo property =
-                type.GetProperty(name, PublicStatic);
-
-            MethodInfo getter =
-                property == null
-                    ? null
-                    : property.GetGetMethod(false);
-
-            if (property == null ||
-                property.PropertyType != expectedType ||
-                getter == null ||
-                !getter.IsStatic)
-            {
-                throw new MissingMemberException(
-                    type.FullName,
-                    name);
-            }
-
-            return property;
         }
 
         private static MethodInfo RequireMethod(
