@@ -8,6 +8,7 @@
   <ItemGroup>
     <Compile Include="..\..\src\CraftingLocationFormatter.cs" Link="CraftingLocationFormatter.cs" />
     <Compile Include="..\..\src\LocationQualifierLocalization.cs" Link="LocationQualifierLocalization.cs" />
+    <Compile Include="..\..\src\RuntimeCompatibility.cs" Link="RuntimeCompatibility.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>
   <ItemGroup>

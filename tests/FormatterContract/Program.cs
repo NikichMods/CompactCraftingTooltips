@@ -10,6 +10,42 @@ internal static class Program
 
     private static void Main()
     {
+        Assert(
+            RuntimeCompatibility.Classify(
+                RuntimeCompatibility.VerifiedAssemblyCSharpMvid) ==
+                HostIdentityStatus.Verified1407,
+            "verified 1.407 MVID is recognized");
+
+        Assert(
+            RuntimeCompatibility.Classify(
+                new Guid("11111111-2222-3333-4444-555555555555")) ==
+                HostIdentityStatus.Unverified,
+            "unknown MVID remains unverified");
+
+        Assert(
+            RuntimeCompatibility.Classify(null) ==
+                HostIdentityStatus.Unverified,
+            "missing MVID remains unverified");
+
+        SessionCircuitBreaker breaker =
+            new SessionCircuitBreaker();
+
+        Assert(
+            !breaker.IsDisabled,
+            "circuit breaker starts enabled");
+
+        Assert(
+            breaker.DisableAndShouldReport(),
+            "first runtime failure requests one report");
+
+        Assert(
+            breaker.IsDisabled,
+            "first runtime failure disables feature for session");
+
+        Assert(
+            !breaker.DisableAndShouldReport(),
+            "repeated runtime failure does not request another report");
+
         AssertFormat(
             "farm full",
             new[]

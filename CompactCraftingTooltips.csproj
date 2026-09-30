@@ -4,7 +4,7 @@
     <LangVersion>7.3</LangVersion>
     <AssemblyName>CompactCraftingTooltips</AssemblyName>
     <RootNamespace>CompactCraftingTooltips</RootNamespace>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Optimize>true</Optimize>
     <DebugType>none</DebugType>
@@ -16,6 +16,7 @@
   <ItemGroup>
     <Compile Include="src\Plugin.cs" />
     <Compile Include="src\GameApi.cs" />
+    <Compile Include="src\RuntimeCompatibility.cs" />
     <Compile Include="src\CraftingLocationFormatter.cs" />
     <Compile Include="src\CraftingTooltipCompactor.cs" />
     <Compile Include="src\LocationQualifierLocalization.cs" />

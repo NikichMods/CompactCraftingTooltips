@@ -14,7 +14,7 @@ namespace CompactCraftingTooltips
     {
         public const string PluginGuid = "nikich.gyk.compactcraftingtooltips";
         public const string PluginName = "Compact Crafting Tooltips";
-        public const string PluginVersion = "0.1.1";
+        public const string PluginVersion = "0.1.2";
 
         internal static ManualLogSource Log;
         private Harmony _harmony;
@@ -23,27 +23,57 @@ namespace CompactCraftingTooltips
         {
             Log = Logger;
 
+            Guid? hostMvid = GameApi.TryGetAssemblyCSharpMvid();
+            string stage = "contract-bind";
+
             try
             {
                 GameApi.Bind();
 
-                MethodInfo tooltip = GameApi.GetFullTooltipMethod();
-                if (tooltip == null)
-                    throw new MissingMethodException("ItemDefinition.GetTooltipData(Item,bool)");
+                stage = "patch-install";
+
+                MethodInfo postfix = typeof(RuntimePatch).GetMethod(
+                    nameof(RuntimePatch.GetTooltipDataPostfix),
+                    BindingFlags.Static | BindingFlags.Public);
+
+                if (postfix == null)
+                    throw new MissingMethodException(
+                        "RuntimePatch.GetTooltipDataPostfix");
 
                 _harmony = new Harmony(PluginGuid);
                 _harmony.Patch(
-                    tooltip,
-                    postfix: new HarmonyMethod(
-                        typeof(RuntimePatch).GetMethod(
-                            nameof(RuntimePatch.GetTooltipDataPostfix),
-                            BindingFlags.Static | BindingFlags.Public)));
+                    GameApi.GetFullTooltipMethod(),
+                    postfix: new HarmonyMethod(postfix));
 
-                Log.LogInfo(PluginName + " " + PluginVersion + " loaded.");
+                string host = RuntimeCompatibility.DescribeHost(hostMvid);
+
+                if (RuntimeCompatibility.Classify(hostMvid) ==
+                    HostIdentityStatus.Verified1407)
+                {
+                    Log.LogInfo(
+                        PluginName + " " + PluginVersion +
+                        " active; host=" + host +
+                        "; contract=ok.");
+                }
+                else
+                {
+                    Log.LogWarning(
+                        PluginName + " " + PluginVersion +
+                        " active best-effort; host=" + host +
+                        "; contract=ok.");
+                }
             }
             catch (Exception ex)
             {
-                Log.LogError(PluginName + " failed to initialize: " + ex);
+                TryRollbackPatch();
+
+                Log.LogError(
+                    PluginName + " " + PluginVersion +
+                    " disabled at startup; host=" +
+                    RuntimeCompatibility.DescribeHost(hostMvid) +
+                    "; stage=" + stage +
+                    "; fallback=vanilla; action=not-patched; reason=" +
+                    ex.GetType().Name + ": " + ex.Message);
             }
         }
 
@@ -52,19 +82,47 @@ namespace CompactCraftingTooltips
             if (_harmony != null)
                 _harmony.UnpatchSelf();
         }
+
+        private void TryRollbackPatch()
+        {
+            if (_harmony == null)
+                return;
+
+            try
+            {
+                _harmony.UnpatchSelf();
+            }
+            catch (Exception ex)
+            {
+                Log.LogError(
+                    PluginName + " " + PluginVersion +
+                    " startup rollback failed; action=unpatch-failed; reason=" +
+                    ex.GetType().Name + ": " + ex.Message);
+            }
+            finally
+            {
+                _harmony = null;
+            }
+        }
     }
 
     internal static class RuntimePatch
     {
-        private static bool _failureLogged;
+        private static readonly SessionCircuitBreaker CircuitBreaker =
+            new SessionCircuitBreaker();
 
         public static void GetTooltipDataPostfix(
             object __instance,
             bool full_detail,
             IList __result)
         {
-            if (!full_detail || __instance == null || __result == null)
+            if (CircuitBreaker.IsDisabled ||
+                !full_detail ||
+                __instance == null ||
+                __result == null)
+            {
                 return;
+            }
 
             try
             {
@@ -72,13 +130,14 @@ namespace CompactCraftingTooltips
             }
             catch (Exception ex)
             {
-                if (_failureLogged)
+                if (!CircuitBreaker.DisableAndShouldReport())
                     return;
 
-                _failureLogged = true;
                 Plugin.Log.LogError(
-                    "Crafting-location compaction failed; leaving vanilla tooltip text unchanged: " +
-                    ex);
+                    Plugin.PluginName + " " + Plugin.PluginVersion +
+                    " runtime failure; feature=crafting-location-compaction" +
+                    "; fallback=vanilla; action=disabled-for-session; reason=" +
+                    ex.GetType().Name + ": " + ex.Message);
             }
         }
     }

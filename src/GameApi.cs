@@ -3,17 +3,16 @@
 using System;
 using System.Collections;
 using System.Reflection;
-using HarmonyLib;
 
 namespace CompactCraftingTooltips
 {
     internal static class GameApi
     {
-        private const BindingFlags AnyInstance =
-            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        private const BindingFlags PublicInstance =
+            BindingFlags.Instance | BindingFlags.Public;
 
-        private const BindingFlags AnyStatic =
-            BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+        private const BindingFlags PublicStatic =
+            BindingFlags.Static | BindingFlags.Public;
 
         internal static Type ItemDefinitionType;
 
@@ -23,7 +22,7 @@ namespace CompactCraftingTooltips
         private static Type _gjlType;
         private static Type _gameSettingsType;
 
-        private static MemberInfo _gameBalanceMe;
+        private static PropertyInfo _gameBalanceMe;
         private static FieldInfo _idField;
         private static FieldInfo _bubbleTextField;
         private static MethodInfo _getItemCraftsIn;
@@ -31,39 +30,88 @@ namespace CompactCraftingTooltips
         private static MethodInfo _tooltipMethod;
         private static MethodInfo _getCurrentLanguage;
 
+        internal static Guid? TryGetAssemblyCSharpMvid()
+        {
+            try
+            {
+                Assembly assembly = FindLoadedAssembly("Assembly-CSharp");
+                return assembly == null
+                    ? (Guid?)null
+                    : assembly.ManifestModule.ModuleVersionId;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         internal static void Bind()
         {
-            ItemDefinitionType = RequireType("ItemDefinition");
-            _itemType = RequireType("Item");
-            _gameBalanceType = RequireType("GameBalance");
-            _bubbleTextType = RequireType("BubbleWidgetTextData");
-            _gjlType = RequireType("GJL");
-            _gameSettingsType = RequireType("GameSettings");
+            Assembly gameAssembly =
+                RequireLoadedAssembly("Assembly-CSharp");
 
-            _gameBalanceMe = RequireMember(_gameBalanceType, "me", AnyStatic);
-            _idField = RequireField(RequireType("BalanceBaseObject"), "id");
-            _bubbleTextField = RequireField(_bubbleTextType, "text");
+            Assembly firstpassAssembly =
+                RequireLoadedAssembly("Assembly-CSharp-firstpass");
+
+            ItemDefinitionType =
+                RequireType(gameAssembly, "ItemDefinition");
+            _itemType =
+                RequireType(gameAssembly, "Item");
+            _gameBalanceType =
+                RequireType(gameAssembly, "GameBalance");
+            _bubbleTextType =
+                RequireType(gameAssembly, "BubbleWidgetTextData");
+            _gameSettingsType =
+                RequireType(gameAssembly, "GameSettings");
+            Type balanceBaseObjectType =
+                RequireType(gameAssembly, "BalanceBaseObject");
+            _gjlType =
+                RequireType(firstpassAssembly, "GJL");
+
+            _gameBalanceMe = RequireStaticProperty(
+                _gameBalanceType,
+                "me",
+                _gameBalanceType);
+
+            _idField = RequireField(
+                balanceBaseObjectType,
+                "id",
+                PublicInstance,
+                typeof(string));
+
+            _bubbleTextField = RequireField(
+                _bubbleTextType,
+                "text",
+                PublicInstance,
+                typeof(string));
+
             _getItemCraftsIn = RequireMethod(
                 _gameBalanceType,
                 "GetItemCraftsIn",
-                new[] { typeof(string) });
+                PublicInstance,
+                new[] { typeof(string) },
+                typeof(IList));
+
             _getCurrentLanguage = RequireMethod(
                 _gameSettingsType,
                 "GetCurrentLanguage",
-                Type.EmptyTypes);
+                PublicStatic,
+                Type.EmptyTypes,
+                typeof(string));
 
-            _localize = FindLocalizationMethod();
+            _localize = RequireMethod(
+                _gjlType,
+                "L",
+                PublicStatic,
+                new[] { typeof(string) },
+                typeof(string));
 
-            _tooltipMethod = ItemDefinitionType.GetMethod(
+            _tooltipMethod = RequireMethod(
+                ItemDefinitionType,
                 "GetTooltipData",
-                AnyInstance,
-                null,
+                PublicInstance,
                 new[] { _itemType, typeof(bool) },
-                null);
-
-            if (_tooltipMethod == null)
-                throw new MissingMethodException(
-                    "ItemDefinition.GetTooltipData(Item,bool)");
+                typeof(IList));
         }
 
         internal static MethodInfo GetFullTooltipMethod()
@@ -80,7 +128,9 @@ namespace CompactCraftingTooltips
 
         internal static IList GetItemCraftsIn(string itemId)
         {
-            object balance = GetMemberValue(_gameBalanceMe, null);
+            object balance =
+                _gameBalanceMe.GetValue(null, null);
+
             return balance == null
                 ? null
                 : _getItemCraftsIn.Invoke(
@@ -100,34 +150,9 @@ namespace CompactCraftingTooltips
             if (string.IsNullOrEmpty(key))
                 return key ?? string.Empty;
 
-            ParameterInfo[] parameters = _localize.GetParameters();
-            object[] args = new object[parameters.Length];
-            args[0] = key;
-
-            for (int i = 1; i < parameters.Length; i++)
-            {
-                if (parameters[i]
-                    .GetCustomAttributes(typeof(ParamArrayAttribute), false)
-                    .Length > 0)
-                {
-                    args[i] = Array.CreateInstance(
-                        parameters[i].ParameterType.GetElementType()
-                            ?? typeof(object),
-                        0);
-                }
-                else if (parameters[i].HasDefaultValue)
-                {
-                    args[i] = parameters[i].DefaultValue;
-                }
-                else
-                {
-                    args[i] = parameters[i].ParameterType.IsValueType
-                        ? Activator.CreateInstance(parameters[i].ParameterType)
-                        : null;
-                }
-            }
-
-            return _localize.Invoke(null, args) as string ?? key;
+            return _localize.Invoke(
+                null,
+                new object[] { key }) as string ?? key;
         }
 
         internal static string GetNativeListSeparator()
@@ -153,112 +178,142 @@ namespace CompactCraftingTooltips
             _bubbleTextField.SetValue(row, text);
         }
 
-        private static MethodInfo FindLocalizationMethod()
+        private static Assembly FindLoadedAssembly(string simpleName)
         {
-            MethodInfo exact = _gjlType.GetMethod(
-                "L",
-                AnyStatic,
-                null,
-                new[] { typeof(string) },
-                null);
+            Assembly found = null;
+            Assembly[] assemblies =
+                AppDomain.CurrentDomain.GetAssemblies();
 
-            if (exact != null)
-                return exact;
-
-            foreach (MethodInfo method in _gjlType.GetMethods(AnyStatic))
+            for (int i = 0; i < assemblies.Length; i++)
             {
-                if (method.Name != "L" || method.ReturnType != typeof(string))
-                    continue;
+                AssemblyName name = assemblies[i].GetName();
 
-                ParameterInfo[] parameters = method.GetParameters();
-                if (parameters.Length == 0 ||
-                    parameters[0].ParameterType != typeof(string))
-                    continue;
-
-                bool compatible = true;
-
-                for (int i = 1; i < parameters.Length; i++)
+                if (!string.Equals(
+                    name.Name,
+                    simpleName,
+                    StringComparison.Ordinal))
                 {
-                    if (!parameters[i].HasDefaultValue &&
-                        parameters[i]
-                            .GetCustomAttributes(
-                                typeof(ParamArrayAttribute),
-                                false)
-                            .Length == 0)
-                    {
-                        compatible = false;
-                        break;
-                    }
+                    continue;
                 }
 
-                if (compatible)
-                    return method;
+                if (found != null)
+                    throw new AmbiguousMatchException(
+                        "Multiple loaded assemblies named " +
+                        simpleName + ".");
+
+                found = assemblies[i];
             }
 
-            throw new MissingMethodException(
-                "Compatible GJL.L overload not found.");
+            return found;
         }
 
-        private static Type RequireType(string name)
+        private static Assembly RequireLoadedAssembly(string simpleName)
         {
-            Type type = AccessTools.TypeByName(name);
+            Assembly assembly = FindLoadedAssembly(simpleName);
+
+            if (assembly == null)
+                throw new TypeLoadException(
+                    "Required assembly not loaded: " + simpleName);
+
+            return assembly;
+        }
+
+        private static Type RequireType(
+            Assembly assembly,
+            string name)
+        {
+            Type type = assembly.GetType(
+                name,
+                false,
+                false);
+
             if (type == null)
-                throw new TypeLoadException(name);
+                throw new TypeLoadException(
+                    assembly.GetName().Name + ":" + name);
 
             return type;
         }
 
-        private static FieldInfo RequireField(Type type, string name)
+        private static FieldInfo RequireField(
+            Type type,
+            string name,
+            BindingFlags flags,
+            Type expectedType)
         {
-            FieldInfo field = type.GetField(name, AnyInstance | AnyStatic);
-            if (field == null)
-                throw new MissingFieldException(type.FullName, name);
+            FieldInfo field = type.GetField(name, flags);
+
+            if (field == null ||
+                field.FieldType != expectedType)
+            {
+                throw new MissingFieldException(
+                    type.FullName,
+                    name);
+            }
 
             return field;
+        }
+
+        private static PropertyInfo RequireStaticProperty(
+            Type type,
+            string name,
+            Type expectedType)
+        {
+            PropertyInfo property =
+                type.GetProperty(name, PublicStatic);
+
+            MethodInfo getter =
+                property == null
+                    ? null
+                    : property.GetGetMethod(false);
+
+            if (property == null ||
+                property.PropertyType != expectedType ||
+                getter == null ||
+                !getter.IsStatic)
+            {
+                throw new MissingMemberException(
+                    type.FullName,
+                    name);
+            }
+
+            return property;
         }
 
         private static MethodInfo RequireMethod(
             Type type,
             string name,
-            Type[] args)
+            BindingFlags flags,
+            Type[] args,
+            Type expectedReturnContract)
         {
             MethodInfo method = type.GetMethod(
                 name,
-                AnyInstance | AnyStatic,
+                flags,
                 null,
                 args,
                 null);
 
-            if (method == null)
-                throw new MissingMethodException(type.FullName, name);
+            if (method == null ||
+                !ReturnTypeMatches(
+                    method.ReturnType,
+                    expectedReturnContract))
+            {
+                throw new MissingMethodException(
+                    type.FullName,
+                    name);
+            }
 
             return method;
         }
 
-        private static MemberInfo RequireMember(
-            Type type,
-            string name,
-            BindingFlags flags)
+        private static bool ReturnTypeMatches(
+            Type actual,
+            Type expectedContract)
         {
-            FieldInfo field = type.GetField(name, flags);
-            if (field != null)
-                return field;
+            if (expectedContract == typeof(IList))
+                return typeof(IList).IsAssignableFrom(actual);
 
-            PropertyInfo property = type.GetProperty(name, flags);
-            if (property != null)
-                return property;
-
-            throw new MissingMemberException(type.FullName, name);
-        }
-
-        private static object GetMemberValue(
-            MemberInfo member,
-            object instance)
-        {
-            FieldInfo field = member as FieldInfo;
-            return field != null
-                ? field.GetValue(instance)
-                : ((PropertyInfo)member).GetValue(instance, null);
+            return actual == expectedContract;
         }
     }
 }
