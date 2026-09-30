@@ -247,3 +247,61 @@ Next step after chat recovery:
 3. create the reviewable evidence gate for compatibility/logging hardening before the first production-source mutation;
 4. implement as a new candidate identity (0.1.1 is immutable; `0.1.2` is the expected next candidate unless current repository evidence establishes a better version);
 5. build/test in CI and hand over only after the DevRules artifact-handoff integrity check.
+
+
+## Compatibility / support-logging hardening evidence gate — 0.1.2
+
+Status: **READY**
+
+Baseline:
+- immutable accepted production behavior: 0.1.1 source `286a7a36123852b38293107188f91fe21ade7345`;
+- current development checkpoint before this gate: `52fa6ff715c4fba1b81bd4b8960db5d8e87b4802`;
+- stable promotion / 1.0.0 / release remain explicitly deferred;
+- the known singleton refugee-camp qualifier edge case remains outside this change.
+
+Observable property:
+- at plugin startup, resolve and validate only the exact host contract required by Compact Crafting Tooltips, cache it, and decide activation before installing the Harmony patch;
+- an unknown host identity alone remains non-blocking when the exact contract is present;
+- a missing required contract disables CCT and preserves vanilla behavior;
+- a contract-breaking exception after activation preserves the vanilla tooltip for that call, disables CCT for the rest of the process session, and logs containment once;
+- ordinary successful operation performs no per-tooltip compatibility discovery or success logging.
+
+Canonical owner / verified seam:
+- tooltip producer and patched method: `ItemDefinition.GetTooltipData(Item,bool)`;
+- native crafting-location source/order: `GameBalance.GetItemCraftsIn(string)`;
+- station identity: `BalanceBaseObject.id`;
+- localization: exact `GJL.L(string)`;
+- current language: `GameSettings.GetCurrentLanguage()`;
+- mutable tooltip text row: `BubbleWidgetTextData.text`;
+- final CCT write remains the existing single `SetBubbleText` call after exact vanilla-row matching.
+
+Additional runtime contract evidence:
+- verified Graveyard Keeper 1.407 `Assembly-CSharp` MVID remains `6f50b8e7-156b-49ac-bbe8-7505894b2364`;
+- direct metadata inspection of the user's installed 1.407 `Assembly-CSharp-firstpass.dll`:
+  - SHA-256: `9dc6def3b7715dd27eeb168ddc0af47e31c6f38d3fbee24bf592899392026498`;
+  - module MVID: `7b81560f-fee5-4bdd-ac8c-058e486c8a3f`;
+  - `GJL.L` method RID 219 is public static and has exact signature `string L(string lng_id)`;
+  - the same type also contains multiple 2–4 argument `L` overloads, so production must bind the exact one-argument signature and must not retain the previous compatible-overload fallback scan.
+- pinned 1.407 `GameBalance.me` is a public static property, so the previous field/property fallback is not part of the required production contract.
+
+Blast radius:
+- startup host identity telemetry;
+- startup reflection binding / exact-contract validation;
+- Harmony installation only after the contract is complete;
+- one-session failure containment around the existing tooltip compactor.
+- No formatter, localization-resource, grouping, station-order, recipe, item, progression, trading, save-data, or unrelated tooltip behavior is in scope.
+
+Preserved invariants:
+- accepted 0.1.1 formatting, localized station names, qualifier resources, native ordering, vanilla-row matching, and layout remain unchanged on verified 1.407;
+- `locations == null || locations.Count < 2` remains unchanged;
+- unknown MVID is a warning / lower-confidence identity only, not an activation veto;
+- no speculative alternate type/member discovery and no MVID/reflection work in the tooltip hot path.
+
+Acceptance evidence:
+1. deterministic automated tests for host-identity classification and the one-session circuit-breaker/log-once state;
+2. production compile plus existing formatter contract tests;
+3. static review that all host binding is exact and cached before patch installation;
+4. only if an integration-boundary assertion remains unproved, add narrow fault injection; otherwise do not add a runtime harness merely to test defensive policy;
+5. final real-game evidence is limited to a short 1.407 startup + representative tooltip sanity check and ordinary `LogOutput.log`.
+
+Gate state: **READY**.
